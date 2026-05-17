@@ -1,0 +1,948 @@
+src/App.jsx
+import { useState, useEffect, useCallback } from "react";
+
+// ============================================================
+// DATA ARRAYS — replace placeholder labels with real image paths later
+// ============================================================
+
+const NAV_LINKS = [
+  { label: "Work", page: "galleries" },
+  { label: "Private", page: "private" },
+  { label: "About", page: "about" },
+  { label: "Contact", page: "contact" },
+];
+
+const PUBLIC_GALLERIES = [
+  {
+    id: "above",
+    title: "Above",
+    subtitle: "Drone",
+    description: "From up there.",
+    color: "#E8F4FD",
+    accent: "#1a6fa8",
+    count: 6,
+  },
+  {
+    id: "new-york",
+    title: "New York",
+    subtitle: "Streets & City",
+    description: "This city, always.",
+    color: "#FEF3E8",
+    accent: "#b8520a",
+    count: 6,
+  },
+  {
+    id: "elsewhere",
+    title: "Elsewhere",
+    subtitle: "Travel",
+    description: "Out in the world.",
+    color: "#EBF5EB",
+    accent: "#2d7a3a",
+    count: 6,
+  },
+  {
+    id: "living",
+    title: "Living",
+    subtitle: "People & Life",
+    description: "The good stuff.",
+    color: "#F5EBF5",
+    accent: "#7a2d7a",
+    count: 6,
+  },
+  {
+    id: "black-white",
+    title: "Black & White",
+    subtitle: "Quiet Images",
+    description: "Slower. Quieter.",
+    color: "#F5F5F3",
+    accent: "#333",
+    count: 6,
+  },
+  {
+    id: "prints",
+    title: "Prints",
+    subtitle: "Coming Soon",
+    description: "Available soon.",
+    color: "#FDF8EE",
+    accent: "#9a7a1a",
+    count: 0,
+    comingSoon: true,
+  },
+];
+
+const PUBLIC_IMAGES = {
+  above: [
+    { id: 1, label: "Spring Lake Drone", location: "Spring Lake, NJ", year: "2024", camera: "DJI Mini 4 Pro", aspect: "landscape" },
+    { id: 2, label: "East River Bridges", location: "New York, NY", year: "2024", camera: "DJI Mini 4 Pro", aspect: "landscape" },
+    { id: 3, label: "Beach From Above", location: "Jersey Shore", year: "2023", camera: "DJI Mini 4 Pro", aspect: "portrait" },
+    { id: 4, label: "NYC Skyline Drone", location: "New York, NY", year: "2024", camera: "DJI Mini 4 Pro", aspect: "landscape" },
+    { id: 5, label: "Greece Coast Drone", location: "Santorini, Greece", year: "2023", camera: "DJI Mini 4 Pro", aspect: "landscape" },
+    { id: 6, label: "Jersey Shore Aerial", location: "Jersey Shore, NJ", year: "2024", camera: "DJI Mini 4 Pro", aspect: "portrait" },
+  ],
+  "new-york": [
+    { id: 7, label: "West Village Night", location: "West Village, NYC", year: "2024", camera: "Sony A7IV", aspect: "portrait" },
+    { id: 8, label: "Central Park Snow", location: "Central Park, NYC", year: "2024", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 9, label: "East River Morning", location: "East River, NYC", year: "2023", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 10, label: "Brooklyn Bridge Walk", location: "Brooklyn, NYC", year: "2024", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 11, label: "Soho Afternoon", location: "SoHo, NYC", year: "2024", camera: "Sony A7IV", aspect: "portrait" },
+    { id: 12, label: "Taxi Blur", location: "Midtown, NYC", year: "2023", camera: "Sony A7IV", aspect: "landscape" },
+  ],
+  elsewhere: [
+    { id: 13, label: "Greece Travel", location: "Santorini, Greece", year: "2023", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 14, label: "Italy Street", location: "Rome, Italy", year: "2022", camera: "Sony A7IV", aspect: "portrait" },
+    { id: 15, label: "Coastal Morning", location: "Amalfi Coast", year: "2022", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 16, label: "Mountain Road", location: "Somewhere West", year: "2023", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 17, label: "Paris Walk", location: "Paris, France", year: "2022", camera: "Sony A7IV", aspect: "portrait" },
+    { id: 18, label: "Island Sunset", location: "Greece", year: "2023", camera: "Sony A7IV", aspect: "landscape" },
+  ],
+  living: [
+    { id: 19, label: "Family Candid", location: "Spring Lake, NJ", year: "2024", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 20, label: "Case & Family", location: "New York, NY", year: "2024", camera: "Sony A7IV", aspect: "portrait" },
+    { id: 21, label: "Friends Dinner", location: "New York, NY", year: "2024", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 22, label: "Spring Lake Weekend", location: "Spring Lake, NJ", year: "2023", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 23, label: "Marathon Morning", location: "New York, NY", year: "2023", camera: "Sony A7IV", aspect: "portrait" },
+    { id: 24, label: "Summer Porch", location: "Spring Lake, NJ", year: "2024", camera: "Sony A7IV", aspect: "landscape" },
+  ],
+  "black-white": [
+    { id: 25, label: "Street Shadow", location: "New York, NY", year: "2024", camera: "Sony A7IV", aspect: "portrait" },
+    { id: 26, label: "Bridge Lines", location: "Brooklyn, NYC", year: "2024", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 27, label: "Rain Window", location: "New York, NY", year: "2023", camera: "Sony A7IV", aspect: "portrait" },
+    { id: 28, label: "Late Train", location: "NYC Subway", year: "2024", camera: "Sony A7IV", aspect: "landscape" },
+    { id: 29, label: "Corner Store", location: "New York, NY", year: "2024", camera: "Sony A7IV", aspect: "portrait" },
+    { id: 30, label: "Quiet Avenue", location: "New York, NY", year: "2023", camera: "Sony A7IV", aspect: "landscape" },
+  ],
+};
+
+// IMPORTANT: Front-end passwords are NOT secure for truly private or sensitive photos.
+// These passwords are visible in the JavaScript source code to anyone who views the page source.
+// For real privacy, replace this system with server-side authentication (Next.js API routes,
+// NextAuth.js, Supabase Auth, or Clerk) with protected routes and server-rendered pages.
+// This prototype is for UX flow demonstration only.
+const PRIVATE_ALBUMS = [
+  {
+    id: "conte-weekend",
+    title: "Conte Weekend",
+    date: "Summer 2024",
+    location: "Spring Lake, NJ",
+    password: "conte2025",
+    images: [
+      { id: "p1", label: "Arrival Day", aspect: "landscape" },
+      { id: "p2", label: "Beach Morning", aspect: "portrait" },
+      { id: "p3", label: "Dinner Night", aspect: "landscape" },
+      { id: "p4", label: "Sunset Walk", aspect: "landscape" },
+    ],
+  },
+  {
+    id: "robo-birthday",
+    title: "Robo Birthday",
+    date: "Spring 2024",
+    location: "New York, NY",
+    password: "robo2025",
+    images: [
+      { id: "p5", label: "Pre-game", aspect: "portrait" },
+      { id: "p6", label: "Dinner Out", aspect: "landscape" },
+      { id: "p7", label: "Late Night", aspect: "landscape" },
+    ],
+  },
+  {
+    id: "jack-trip",
+    title: "Jack Trip",
+    date: "Fall 2023",
+    location: "Upstate, NY",
+    password: "jack2025",
+    images: [
+      { id: "p8", label: "Road Up", aspect: "landscape" },
+      { id: "p9", label: "The House", aspect: "landscape" },
+      { id: "p10", label: "Morning Coffee", aspect: "portrait" },
+    ],
+  },
+  {
+    id: "colin-summer",
+    title: "Colin Summer",
+    date: "Summer 2023",
+    location: "Various",
+    password: "colin2025",
+    images: [
+      { id: "p11", label: "Day One", aspect: "landscape" },
+      { id: "p12", label: "Night Out", aspect: "portrait" },
+    ],
+  },
+  {
+    id: "michael-night",
+    title: "Michael Night Out",
+    date: "Winter 2024",
+    location: "New York, NY",
+    password: "michael2025",
+    images: [
+      { id: "p13", label: "Before", aspect: "portrait" },
+      { id: "p14", label: "After", aspect: "landscape" },
+    ],
+  },
+  {
+    id: "spring-lake-family",
+    title: "Spring Lake Family Weekend",
+    date: "Summer 2024",
+    location: "Spring Lake, NJ",
+    password: "springlake2025",
+    images: [
+      { id: "p15", label: "Arrival", aspect: "landscape" },
+      { id: "p16", label: "Beach Day", aspect: "landscape" },
+      { id: "p17", label: "Family Dinner", aspect: "portrait" },
+      { id: "p18", label: "Sunday Morning", aspect: "landscape" },
+    ],
+  },
+  {
+    id: "case-family",
+    title: "Case & Family",
+    date: "Fall 2024",
+    location: "New York, NY",
+    password: "family2025",
+    images: [
+      { id: "p19", label: "Together", aspect: "landscape" },
+      { id: "p20", label: "The Kids", aspect: "portrait" },
+      { id: "p21", label: "Afternoon", aspect: "landscape" },
+    ],
+  },
+  {
+    id: "greece-friends",
+    title: "Greece Friends Trip",
+    date: "Summer 2023",
+    location: "Santorini, Greece",
+    password: "greece2025",
+    images: [
+      { id: "p22", label: "Landing", aspect: "landscape" },
+      { id: "p23", label: "Cliffside", aspect: "portrait" },
+      { id: "p24", label: "Sunset Dinner", aspect: "landscape" },
+      { id: "p25", label: "Last Day", aspect: "landscape" },
+    ],
+  },
+];
+
+// ============================================================
+// PLACEHOLDER IMAGE COMPONENT
+// To use real images, replace <PlaceholderImage> with:
+// <img src={image.src} alt={image.label} style={{width:"100%",height:"100%",objectFit:"cover"}} />
+// and add a `src` field to each image in the data arrays above.
+// ============================================================
+
+const palette = [
+  ["#d4e8f0", "#8bb8cc"],
+  ["#f0e6d4", "#ccaa88"],
+  ["#d4f0e8", "#88ccaa"],
+  ["#e8d4f0", "#bb88cc"],
+  ["#f0f0e8", "#c8c8b8"],
+  ["#f0ddd4", "#ccaa9a"],
+];
+
+function PlaceholderImage({ label, aspect = "landscape", index = 0, bw = false }) {
+  const [bg, fg] = palette[index % palette.length];
+  return (
+    <div style={{
+      width: "100%", height: "100%",
+      background: bw ? "#d8d8d0" : bg,
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      gap: "6px",
+      filter: bw ? "grayscale(1)" : "none",
+    }}>
+      <span style={{
+        fontSize: "11px",
+        fontFamily: "'DM Mono', monospace",
+        color: bw ? "#777" : fg,
+        letterSpacing: "0.05em",
+        textAlign: "center",
+        padding: "0 12px",
+        lineHeight: 1.4,
+      }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ============================================================
+// LIGHTBOX MODAL
+// ============================================================
+
+function LightboxModal({ images, startIndex, onClose, bw = false }) {
+  const [current, setCurrent] = useState(startIndex);
+
+  const prev = useCallback(() => setCurrent(i => (i - 1 + images.length) % images.length), [images.length]);
+  const next = useCallback(() => setCurrent(i => (i + 1) % images.length), [images.length]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose, prev, next]);
+
+  const img = images[current];
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, background: "rgba(10,10,10,0.96)",
+        zIndex: 1000, display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+      }}
+    >
+      <button
+        onClick={onClose}
+        style={{ position: "absolute", top: 24, right: 28, background: "none", border: "none", color: "#fff", fontSize: 28, cursor: "pointer", opacity: 0.7, lineHeight: 1 }}
+        aria-label="Close"
+      >×</button>
+
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ width: "min(860px, 92vw)", maxHeight: "80vh", display: "flex", flexDirection: "column" }}
+      >
+        <div style={{
+          width: "100%",
+          aspectRatio: img.aspect === "portrait" ? "3/4" : "3/2",
+          maxHeight: "70vh",
+          background: "#1a1a1a",
+          borderRadius: 4,
+          overflow: "hidden",
+        }}>
+          <PlaceholderImage label={img.label} aspect={img.aspect} index={img.id} bw={bw} />
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 2px 0" }}>
+          <div>
+            <p style={{ margin: 0, color: "#fff", fontSize: 14, fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: "italic" }}>{img.label}</p>
+            {img.location && (
+              <p style={{ margin: "2px 0 0", color: "rgba(255,255,255,0.45)", fontSize: 12, fontFamily: "'DM Mono', monospace", letterSpacing: "0.04em" }}>
+                {img.location}{img.year ? ` — ${img.year}` : ""}{img.camera ? ` — ${img.camera}` : ""}
+              </p>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button onClick={prev} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", width: 38, height: 38, borderRadius: 4, cursor: "pointer", fontSize: 16 }}>←</button>
+            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, minWidth: 40, textAlign: "center", fontFamily: "'DM Mono', monospace" }}>
+              {current + 1} / {images.length}
+            </span>
+            <button onClick={next} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", width: 38, height: 38, borderRadius: 4, cursor: "pointer", fontSize: 16 }}>→</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// IMAGE GRID
+// ============================================================
+
+function ImageGrid({ images, bw = false }) {
+  const [lightbox, setLightbox] = useState(null);
+  const cols = [[], [], []];
+  images.forEach((img, i) => cols[i % 3].push({ ...img, origIndex: i }));
+
+  return (
+    <>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+        {cols.map((col, ci) => (
+          <div key={ci} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {col.map((img) => (
+              <div
+                key={img.id}
+                onClick={() => setLightbox(img.origIndex)}
+                style={{
+                  width: "100%",
+                  aspectRatio: img.aspect === "portrait" ? "3/4" : "4/3",
+                  cursor: "pointer",
+                  borderRadius: 3,
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                <PlaceholderImage label={img.label} aspect={img.aspect} index={img.id} bw={bw} />
+                <div
+                  style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0)", transition: "background 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.28)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "rgba(0,0,0,0)"}
+                />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      {lightbox !== null && (
+        <LightboxModal images={images} startIndex={lightbox} onClose={() => setLightbox(null)} bw={bw} />
+      )}
+    </>
+  );
+}
+
+// ============================================================
+// PASSWORD GATE
+// ============================================================
+
+function PasswordGate({ album, onUnlock }) {
+  const [value, setValue] = useState("");
+  const [error, setError] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const submit = () => {
+    if (value.trim() === album.password) {
+      onUnlock();
+    } else {
+      setError(true);
+      setShake(true);
+      setTimeout(() => setShake(false), 400);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32 }}>
+      <div style={{ textAlign: "center" }}>
+        <p style={{ margin: "0 0 4px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.08em", color: "#999", textTransform: "uppercase" }}>Private Gallery</p>
+        <h2 style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 32, fontWeight: 600, color: "#111" }}>{album.title}</h2>
+        <p style={{ margin: "6px 0 0", color: "#888", fontSize: 14 }}>{album.date} — {album.location}</p>
+        <p style={{ margin: "20px 0 0", color: "#aaa", fontSize: 13, fontStyle: "italic" }}>For friends and family.</p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, animation: shake ? "shake 0.3s ease" : "none" }}>
+        <input
+          type="password"
+          placeholder="Enter password"
+          value={value}
+          onChange={e => { setValue(e.target.value); setError(false); }}
+          onKeyDown={e => e.key === "Enter" && submit()}
+          style={{
+            width: 260, padding: "12px 16px",
+            border: `1px solid ${error ? "#e07070" : "#ddd"}`,
+            borderRadius: 4, fontSize: 16,
+            fontFamily: "'DM Mono', monospace",
+            outline: "none", background: "#fafafa",
+            color: "#111", textAlign: "center",
+            letterSpacing: "0.1em",
+          }}
+        />
+        {error && <p style={{ margin: 0, color: "#c05050", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>Incorrect password.</p>}
+        <button
+          onClick={submit}
+          style={{
+            background: "#111", color: "#fff", border: "none", borderRadius: 4,
+            padding: "12px 32px", fontSize: 13,
+            fontFamily: "'DM Mono', monospace", letterSpacing: "0.06em", cursor: "pointer",
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = 0.8}
+          onMouseLeave={e => e.currentTarget.style.opacity = 1}
+        >
+          VIEW ALBUM
+        </button>
+      </div>
+      <style>{`@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }`}</style>
+    </div>
+  );
+}
+
+// ============================================================
+// HEADER
+// ============================================================
+
+function Header({ page, setPage }) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  const nav = (p) => { setPage(p); window.scrollTo(0, 0); };
+
+  return (
+    <header style={{
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+      background: scrolled ? "rgba(254,254,252,0.94)" : "transparent",
+      backdropFilter: scrolled ? "blur(12px)" : "none",
+      borderBottom: scrolled ? "1px solid rgba(0,0,0,0.06)" : "none",
+      transition: "all 0.3s ease",
+      padding: "0 32px",
+    }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button onClick={() => nav("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+          <span style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: 22, fontWeight: 600,
+            color: page === "home" && !scrolled ? "#fff" : "#111",
+            letterSpacing: "0.02em", transition: "color 0.3s",
+          }}>Too Easy</span>
+        </button>
+        <nav style={{ display: "flex", gap: 36, alignItems: "center" }}>
+          {NAV_LINKS.map(l => (
+            <button
+              key={l.page}
+              onClick={() => nav(l.page)}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: "'DM Mono', monospace", fontSize: 12,
+                letterSpacing: "0.08em",
+                color: page === "home" && !scrolled ? "rgba(255,255,255,0.85)" : "#555",
+                textTransform: "uppercase", padding: 0,
+                borderBottom: page === l.page ? "1px solid currentColor" : "1px solid transparent",
+                transition: "color 0.2s",
+              }}
+            >
+              {l.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+// ============================================================
+// GALLERY CARD
+// ============================================================
+
+function GalleryCard({ gallery, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ cursor: "pointer", borderRadius: 4, overflow: "hidden", background: gallery.color, transition: "transform 0.2s", transform: hovered ? "translateY(-3px)" : "none" }}
+    >
+      <div style={{ aspectRatio: "4/3", overflow: "hidden" }}>
+        {PUBLIC_IMAGES[gallery.id] ? (
+          <PlaceholderImage label={PUBLIC_IMAGES[gallery.id][0].label} aspect="landscape" index={PUBLIC_IMAGES[gallery.id][0].id} />
+        ) : (
+          <div style={{ width: "100%", height: "100%", background: gallery.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: gallery.accent }}>Coming Soon</span>
+          </div>
+        )}
+      </div>
+      <div style={{ padding: "14px 16px" }}>
+        <p style={{ margin: "0 0 2px", fontSize: 18, fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "#111" }}>{gallery.title}</p>
+        <p style={{ margin: 0, fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#888", letterSpacing: "0.06em", textTransform: "uppercase" }}>{gallery.subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PRIVATE GALLERY CARD
+// ============================================================
+
+function PrivateGalleryCard({ album, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ cursor: "pointer", borderRadius: 4, overflow: "hidden", transition: "transform 0.2s", transform: hovered ? "translateY(-3px)" : "none" }}
+    >
+      <div style={{ aspectRatio: "1/1", background: "#e8e6e2", position: "relative", overflow: "hidden" }}>
+        <PlaceholderImage label={album.title} aspect="square" index={album.id.length} />
+        <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.5)", borderRadius: 2, padding: "3px 7px" }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#fff" }}>🔒</span>
+        </div>
+      </div>
+      <div style={{ padding: "10px 4px" }}>
+        <p style={{ margin: "0 0 2px", fontSize: 14, fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, color: "#111" }}>{album.title}</p>
+        <p style={{ margin: 0, fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#999", letterSpacing: "0.04em" }}>{album.date}</p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// HOME PAGE
+// ============================================================
+
+function HomePage({ setPage, setGalleryId, setAlbumId }) {
+  const featuredImages = PUBLIC_IMAGES.above.slice(0, 4);
+
+  return (
+    <div>
+      {/* Hero */}
+      <div style={{ position: "relative", height: "100vh", minHeight: 600, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          <PlaceholderImage label="NYC Skyline Drone — Hero" aspect="landscape" index={3} />
+        </div>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.0) 40%, rgba(0,0,0,0.5) 100%)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 40px 60px", maxWidth: 1200, margin: "0 auto" }}>
+          <p style={{ margin: "0 0 10px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: "rgba(255,255,255,0.65)", textTransform: "uppercase" }}>
+            New York — Drone & Photography
+          </p>
+          <h1 style={{ margin: "0 0 14px", fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "clamp(48px, 7vw, 88px)", fontWeight: 600, color: "#fff", lineHeight: 0.95, letterSpacing: "-0.01em" }}>
+            Let's go.<br />We are living.
+          </h1>
+          <p style={{ margin: 0, color: "rgba(255,255,255,0.72)", fontSize: 17, fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: "italic" }}>
+            Photos from above, around, and along the way.
+          </p>
+        </div>
+      </div>
+
+      {/* Featured Drone */}
+      <section style={{ padding: "80px 40px", maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 32 }}>
+          <div>
+            <p style={{ margin: "0 0 4px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#999", textTransform: "uppercase" }}>From Above</p>
+            <h2 style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 36, fontWeight: 600, color: "#111" }}>Drone Work</h2>
+          </div>
+          <button
+            onClick={() => { setGalleryId("above"); setPage("gallery"); window.scrollTo(0, 0); }}
+            style={{ background: "none", border: "1px solid #ddd", borderRadius: 3, padding: "9px 20px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.08em", color: "#666", cursor: "pointer", textTransform: "uppercase" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#111"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#111"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#666"; e.currentTarget.style.borderColor = "#ddd"; }}
+          >
+            View All
+          </button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+          {featuredImages.map((img, i) => (
+            <div
+              key={img.id}
+              onClick={() => { setGalleryId("above"); setPage("gallery"); window.scrollTo(0, 0); }}
+              style={{
+                aspectRatio: i === 0 ? "16/9" : img.aspect === "portrait" ? "3/4" : "4/3",
+                gridColumn: i === 0 ? "1 / -1" : "auto",
+                borderRadius: 4, overflow: "hidden", cursor: "pointer",
+              }}
+            >
+              <PlaceholderImage label={img.label} aspect={i === 0 ? "landscape" : img.aspect} index={img.id} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Gallery Cards */}
+      <section style={{ padding: "0 40px 80px", maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ borderTop: "1px solid #eee", paddingTop: 64, marginBottom: 40 }}>
+          <p style={{ margin: "0 0 4px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#999", textTransform: "uppercase" }}>Galleries</p>
+          <h2 style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 36, fontWeight: 600, color: "#111" }}>Browse the Work</h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+          {PUBLIC_GALLERIES.filter(g => !g.comingSoon).map(gallery => (
+            <GalleryCard key={gallery.id} gallery={gallery} onClick={() => { setGalleryId(gallery.id); setPage("gallery"); window.scrollTo(0, 0); }} />
+          ))}
+        </div>
+      </section>
+
+      {/* Private Albums */}
+      <section style={{ padding: "64px 40px", background: "#f9f8f6" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 32 }}>
+            <div>
+              <p style={{ margin: "0 0 4px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#999", textTransform: "uppercase" }}>Password Protected</p>
+              <h2 style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 36, fontWeight: 600, color: "#111" }}>Friends & Family</h2>
+            </div>
+            <button
+              onClick={() => { setPage("private"); window.scrollTo(0, 0); }}
+              style={{ background: "none", border: "1px solid #ddd", borderRadius: 3, padding: "9px 20px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.08em", color: "#666", cursor: "pointer", textTransform: "uppercase" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#111"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#111"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#666"; e.currentTarget.style.borderColor = "#ddd"; }}
+            >
+              All Albums
+            </button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+            {PRIVATE_ALBUMS.slice(0, 4).map(album => (
+              <PrivateGalleryCard key={album.id} album={album} onClick={() => { setAlbumId(album.id); setPage("private-album"); window.scrollTo(0, 0); }} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* About Preview */}
+      <section style={{ padding: "80px 40px", maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
+        <p style={{ margin: "0 0 4px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#999", textTransform: "uppercase" }}>About</p>
+        <blockquote style={{ margin: "20px 0 32px", fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 400, color: "#333", lineHeight: 1.5, fontStyle: "italic", border: "none", padding: 0 }}>
+          "I'm based in New York and photograph the places, people, and moments I want to remember."
+        </blockquote>
+        <button
+          onClick={() => { setPage("about"); window.scrollTo(0, 0); }}
+          style={{ background: "none", border: "1px solid #ddd", borderRadius: 3, padding: "10px 24px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.08em", color: "#666", cursor: "pointer", textTransform: "uppercase" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "#111"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#111"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#666"; e.currentTarget.style.borderColor = "#ddd"; }}
+        >
+          More About
+        </button>
+      </section>
+
+      {/* CTA */}
+      <section style={{ padding: "64px 40px", background: "#111", textAlign: "center" }}>
+        <p style={{ margin: "0 0 8px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>Prints & Inquiries</p>
+        <h2 style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 36, fontWeight: 600, color: "#fff" }}>
+          For prints, photos, or future projects,<br />reach out.
+        </h2>
+        <button
+          onClick={() => { setPage("contact"); window.scrollTo(0, 0); }}
+          style={{ marginTop: 24, background: "none", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 3, padding: "12px 32px", fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: "0.1em", color: "rgba(255,255,255,0.8)", cursor: "pointer", textTransform: "uppercase" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#111"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+        >
+          Get in Touch
+        </button>
+      </section>
+    </div>
+  );
+}
+
+// ============================================================
+// GALLERIES INDEX
+// ============================================================
+
+function GalleriesPage({ setPage, setGalleryId }) {
+  return (
+    <div style={{ paddingTop: 100, minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 80px" }}>
+        <div style={{ marginBottom: 56 }}>
+          <p style={{ margin: "0 0 6px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#999", textTransform: "uppercase" }}>Photography</p>
+          <h1 style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "clamp(40px, 6vw, 60px)", fontWeight: 600, color: "#111" }}>Work</h1>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+          {PUBLIC_GALLERIES.map(gallery => (
+            <GalleryCard
+              key={gallery.id}
+              gallery={gallery}
+              onClick={() => { if (!gallery.comingSoon) { setGalleryId(gallery.id); setPage("gallery"); window.scrollTo(0, 0); } }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// INDIVIDUAL GALLERY PAGE
+// ============================================================
+
+function GalleryPage({ galleryId, setPage }) {
+  const gallery = PUBLIC_GALLERIES.find(g => g.id === galleryId);
+  const images = PUBLIC_IMAGES[galleryId] || [];
+  const isBW = galleryId === "black-white";
+  if (!gallery) return null;
+
+  return (
+    <div style={{ paddingTop: 100, minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 80px" }}>
+        <button onClick={() => { setPage("galleries"); window.scrollTo(0, 0); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#999", letterSpacing: "0.06em", textTransform: "uppercase", padding: "0 0 32px", display: "block" }}>
+          ← Work
+        </button>
+        <div style={{ marginBottom: 48 }}>
+          <p style={{ margin: "0 0 4px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#999", textTransform: "uppercase" }}>{gallery.subtitle}</p>
+          <h1 style={{ margin: "0 0 8px", fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 52, fontWeight: 600, color: "#111" }}>{gallery.title}</h1>
+          <p style={{ margin: 0, color: "#888", fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: "italic", fontSize: 18 }}>{gallery.description}</p>
+        </div>
+        <ImageGrid images={images} bw={isBW} />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PRIVATE GALLERIES INDEX
+// ============================================================
+
+function PrivatePage({ setPage, setAlbumId }) {
+  return (
+    <div style={{ paddingTop: 100, minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 80px" }}>
+        <div style={{ marginBottom: 48 }}>
+          <p style={{ margin: "0 0 6px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#999", textTransform: "uppercase" }}>Password Protected</p>
+          <h1 style={{ margin: "0 0 10px", fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "clamp(40px, 6vw, 60px)", fontWeight: 600, color: "#111" }}>Friends & Family</h1>
+          <p style={{ margin: 0, color: "#888", fontStyle: "italic", fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18 }}>For friends and family.</p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+          {PRIVATE_ALBUMS.map(album => (
+            <PrivateGalleryCard key={album.id} album={album} onClick={() => { setAlbumId(album.id); setPage("private-album"); window.scrollTo(0, 0); }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PRIVATE ALBUM PAGE
+// ============================================================
+
+function PrivateAlbumPage({ albumId, setPage }) {
+  const album = PRIVATE_ALBUMS.find(a => a.id === albumId);
+  const [unlocked, setUnlocked] = useState(false);
+  if (!album) return null;
+
+  return (
+    <div style={{ paddingTop: 100, minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 80px" }}>
+        <button onClick={() => { setPage("private"); window.scrollTo(0, 0); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#999", letterSpacing: "0.06em", textTransform: "uppercase", padding: "0 0 32px", display: "block" }}>
+          ← Friends & Family
+        </button>
+        {!unlocked ? (
+          <PasswordGate album={album} onUnlock={() => setUnlocked(true)} />
+        ) : (
+          <>
+            <div style={{ marginBottom: 48 }}>
+              <p style={{ margin: "0 0 4px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#999", textTransform: "uppercase" }}>Private Gallery</p>
+              <h1 style={{ margin: "0 0 6px", fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 48, fontWeight: 600, color: "#111" }}>{album.title}</h1>
+              <p style={{ margin: 0, color: "#888", fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: "0.06em" }}>{album.date} — {album.location}</p>
+            </div>
+            <ImageGrid images={album.images} />
+            <div style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <p style={{ margin: 0, color: "#bbb", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>For friends and family.</p>
+              <button style={{ background: "none", border: "1px solid #ddd", borderRadius: 3, padding: "9px 20px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.08em", color: "#bbb", cursor: "not-allowed", textTransform: "uppercase" }}>
+                Download (Coming Soon)
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ABOUT PAGE
+// ============================================================
+
+function AboutPage({ setPage }) {
+  return (
+    <div style={{ paddingTop: 120, minHeight: "100vh" }}>
+      <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 40px 80px" }}>
+        <p style={{ margin: "0 0 6px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#999", textTransform: "uppercase" }}>About</p>
+        <h1 style={{ margin: "0 0 40px", fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 52, fontWeight: 600, color: "#111" }}>Too Easy</h1>
+        <p style={{ margin: "0 0 28px", fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, color: "#333", lineHeight: 1.6 }}>
+          I'm based in New York and photograph the places, people, and moments I want to remember — from drone views and city scenes to travel, family, and weekends with friends.
+        </p>
+        <p style={{ margin: "0 0 48px", fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: "italic", fontSize: 20, color: "#666", lineHeight: 1.6 }}>
+          Too Easy is a personal archive for photos from above, around, and along the way.
+        </p>
+        <div style={{ borderTop: "1px solid #eee", paddingTop: 40, marginBottom: 48 }}>
+          <p style={{ margin: "0 0 6px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#bbb", textTransform: "uppercase" }}>Gear</p>
+          <p style={{ margin: 0, color: "#888", fontFamily: "'DM Mono', monospace", fontSize: 13, lineHeight: 2 }}>
+            DJI Mini 4 Pro<br />Sony A7 IV<br />iPhone 15 Pro
+          </p>
+        </div>
+        <button
+          onClick={() => { setPage("contact"); window.scrollTo(0, 0); }}
+          style={{ background: "#111", color: "#fff", border: "none", borderRadius: 3, padding: "12px 28px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.08em", cursor: "pointer", textTransform: "uppercase" }}
+          onMouseEnter={e => e.currentTarget.style.opacity = 0.8}
+          onMouseLeave={e => e.currentTarget.style.opacity = 1}
+        >
+          Get in Touch
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// CONTACT PAGE
+// ============================================================
+
+function ContactPage() {
+  return (
+    <div style={{ paddingTop: 120, minHeight: "100vh" }}>
+      <div style={{ maxWidth: 600, margin: "0 auto", padding: "0 40px 80px" }}>
+        <p style={{ margin: "0 0 6px", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#999", textTransform: "uppercase" }}>Reach Out</p>
+        <h1 style={{ margin: "0 0 16px", fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 52, fontWeight: 600, color: "#111" }}>Contact</h1>
+        <p style={{ margin: "0 0 56px", fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: "italic", fontSize: 22, color: "#666" }}>
+          For prints, photos, or future projects, reach out.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 32, marginBottom: 56 }}>
+          {[
+            { label: "Email", value: "hello@tooeasy.com", sub: "General inquiries & prints", href: "mailto:hello@tooeasy.com" },
+            { label: "Instagram", value: "@tooeasy", sub: "Follow along", href: "#" },
+          ].map(item => (
+            <div key={item.label}>
+              <p style={{ margin: "0 0 4px", fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.1em", color: "#bbb", textTransform: "uppercase" }}>{item.label}</p>
+              <a href={item.href} style={{ color: "#111", fontSize: 20, fontFamily: "'Cormorant Garamond', Georgia, serif", textDecoration: "none", borderBottom: "1px solid #eee", display: "inline-block" }}>{item.value}</a>
+              <p style={{ margin: "4px 0 0", color: "#aaa", fontSize: 13, fontFamily: "'DM Mono', monospace" }}>{item.sub}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{ borderTop: "1px solid #eee", paddingTop: 40 }}>
+          <p style={{ margin: "0 0 20px", fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.1em", color: "#bbb", textTransform: "uppercase" }}>Inquiries</p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {["Print Inquiry", "Photo Project", "Licensing", "General"].map(type => (
+              <button key={type}
+                style={{ background: "#f8f7f5", border: "1px solid #eee", borderRadius: 3, padding: "10px 18px", fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#666", cursor: "pointer", letterSpacing: "0.05em" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#111"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#111"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#f8f7f5"; e.currentTarget.style.color = "#666"; e.currentTarget.style.borderColor = "#eee"; }}
+              >{type}</button>
+            ))}
+          </div>
+          <p style={{ margin: "20px 0 0", color: "#ccc", fontSize: 12, fontFamily: "'DM Mono', monospace", lineHeight: 1.7 }}>
+            This site is personal first, but open to inquiries.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// FOOTER
+// ============================================================
+
+function Footer({ setPage }) {
+  return (
+    <footer style={{ borderTop: "1px solid #eee", padding: "32px 40px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <button onClick={() => { setPage("home"); window.scrollTo(0, 0); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, fontWeight: 600, color: "#111", padding: 0 }}>
+          Too Easy
+        </button>
+        <div style={{ display: "flex", gap: 28 }}>
+          {NAV_LINKS.map(l => (
+            <button key={l.page} onClick={() => { setPage(l.page); window.scrollTo(0, 0); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.08em", color: "#bbb", textTransform: "uppercase", padding: 0 }}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <p style={{ margin: 0, fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#ddd", letterSpacing: "0.06em" }}>
+          NYC — {new Date().getFullYear()}
+        </p>
+      </div>
+    </footer>
+  );
+}
+
+// ============================================================
+// ROOT APP
+// ============================================================
+
+export default function App() {
+  const [page, setPage] = useState("home");
+  const [galleryId, setGalleryId] = useState(null);
+  const [albumId, setAlbumId] = useState(null);
+
+  const renderPage = () => {
+    switch (page) {
+      case "home":          return <HomePage setPage={setPage} setGalleryId={setGalleryId} setAlbumId={setAlbumId} />;
+      case "galleries":     return <GalleriesPage setPage={setPage} setGalleryId={setGalleryId} />;
+      case "gallery":       return <GalleryPage galleryId={galleryId} setPage={setPage} />;
+      case "private":       return <PrivatePage setPage={setPage} setAlbumId={setAlbumId} />;
+      case "private-album": return <PrivateAlbumPage albumId={albumId} setPage={setPage} />;
+      case "about":         return <AboutPage setPage={setPage} />;
+      case "contact":       return <ContactPage />;
+      default:              return null;
+    }
+  };
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=DM+Mono:wght@400&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #fefefe; color: #111; -webkit-font-smoothing: antialiased; }
+        button:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+      `}</style>
+      <Header page={page} setPage={setPage} />
+      <main style={{ minHeight: "100vh" }}>{renderPage()}</main>
+      <Footer setPage={setPage} />
+    </>
+  );
+}
